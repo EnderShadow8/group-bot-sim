@@ -1,9 +1,13 @@
-import {genMap, Vegetation} from "../runner/controller/world.js"
+import {genMap, genFood, Vegetation} from "../runner/controller/world.js"
 
 window.setup = function() {
+  noiseSeed(818)
   const n = 100
   const s = 6
   const g = genMap(n, window)
+  for(let i = 0; i < 10; i++) {
+    genFood(g)
+  }
   createCanvas(s * n, s * n)
   noStroke()
   const ct = [
@@ -14,6 +18,10 @@ window.setup = function() {
   ]
   const cv = [
     [100, 100, 0],
+    [255, 0, 0],
+    [0, 0, 255],
+    [0, 255, 255],
+    [0, 255, 0],
   ]
 
   for(let x = 0; x < n; x++) {

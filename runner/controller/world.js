@@ -1,10 +1,17 @@
-class GameObject {
+import {MAP_SIZE, randint, vicinity} from "../utils.js"
+
+class Vegetation {
   constructor(id) {
     this.id = id
   }
 }
-class Vegetation extends GameObject {}
-class Agent extends GameObject {}
+
+class Agent {
+  constructor(id, team) {
+    this.id = id
+    this.team = team
+  }
+}
 
 function genMap(n, p) {
   const ns = 0.025
@@ -17,9 +24,9 @@ function genMap(n, p) {
       const weight = [0.05, -0.1, -0.05, 0]
       const arr = range.map(i => p.noise(x * ns + i * 1e4, y * ns + i * 1e4) + weight[i])
       let t = arr.indexOf(Math.max(...arr))
-      const tree = [0.02, 0.03, 0.01, 0]
+      const treeRate = [0.015, 0.02, 0.01, 0]
       g[x][y] = {terrain: t}
-      if(Math.random() < tree[t]) {
+      if(Math.random() < treeRate[t]) {
         g[x][y].object = new Vegetation(0)
       }
     }
@@ -54,4 +61,36 @@ function genMap(n, p) {
   return g
 }
 
-export {genMap, Vegetation, Agent}
+function genFood(world) {
+  const bushRate = [0.001, 0.001, 0.0005, 0]
+  const fernRate = 0.001
+  const cactusRate = 0.0005
+  const fruitRate = 0.1
+  const jungleMult = 1.5
+  for(let x = 0; x < MAP_SIZE; x++) {
+    for(let y = 0; y < MAP_SIZE; y++) {
+      const t = world[x][y]
+      if(!t.object) {
+        if(Math.random() < bushRate[t.terrain]) {
+          t.object = new Vegetation(2)
+        } else if(t.terrain === 1 && Math.random() < fernRate) {
+          t.object = new Vegetation(3)
+        } else if(t.terrain === 3 && Math.random() < cactusRate) {
+          t.object = new Vegetation(4)
+        }
+      } else if(
+        t.object instanceof Vegetation
+        && t.object.id === 0
+        && Math.random() < fruitRate * (t.terrain === 1 ? jungleMult : 1)
+      ) {
+        const poss = vicinity(x, y, 2).filter(i => !world[i.x][i.y].object)
+        const choice = poss[randint(0, poss.length - 1)]
+        if(choice) {
+          world[choice.x][choice.y].object = new Vegetation(1)
+        }
+      }
+    }
+  }
+}
+
+export {genMap, genFood, Vegetation, Agent}
